@@ -3,10 +3,17 @@
     <!-- 首页第一屏内容容器，通过flex布局实现垂直水平居中 -->
     <div class="homepage">
       <!-- 名字标题，通过v-for将文字拆分为单个字母span，便于后续动画操作 -->
-      <h1 class="name" ref="nameRef">
+      <h1 
+        class="name" 
+        ref="nameRef"
+        @mouseenter= "handleMouseEnter" 
+        @mouseleave= "handleMouseLeave" 
+        >
+
+        <!--遍历当前文字，每个字母生成一个span元素-->
         <span
           class="letter"
-          v-for="(letter, index) in text"
+          v-for="(letter, index) in currentText"  
           :key="index"
           :ref="(el) => letterRefs[index] = el"
         >
@@ -37,10 +44,21 @@ import { ref, onMounted, Ref, nextTick } from 'vue';
 // 从gsap中引入动画核心方法
 import { gsap } from 'gsap';
 
-// 定义要显示的名字文本
-const text = 'QIYE WANG';
-// 用于获取h1标题DOM元素的ref
-const nameRef: Ref<HTMLElement | null> = ref(null);
+// 固定显示的文字，鼠标悬停时
+const staticText = 'QIYE WANG';
+
+//动态变化的文字列表，鼠标离开时
+//设计思路：从单个字母逐个过渡到完整名字，营造动态感
+const dynamicTexts =[
+  'Q','QI','QIY','QIYE',  // 逐步显示"QIYE"
+  'W','WA','WAN','WANG',  // 逐步显示"WANG"
+  'Q WANG','QI WANG','QIY WANG',   // 逐步显示完整名字
+  'QIYE W','QIYE WA','QIYE WAN','QIYE WANG',
+];
+
+//当前显示的文字（响应式变量）
+const currentText = ref(dynamicTexts[0]);
+
 // 用于存储每个字母span DOM元素的ref数组
 const letterRefs: Ref<(HTMLElement | null)[]> = ref([]);
 
