@@ -56,15 +56,33 @@ const handleMouseEnter = () => {
     if(letter) {
       letter.classList.remove('orange-blur');
       letter.classList.add('gray-sharp');
+
+      //平滑过渡
+      gsap.to(letter,{
+        filter:'blur(0)',
+        color: '#848484',
+        duration: 0.3,
+        ease: 'power2.out'
+      })
     }
   });
+};
 
-  //使用GSAP添加平滑过渡动画
-  gsap.to(letterRefs.value.filter(el => el), {
-    filter:'blur(0)',
-    color: '#848484',
-    duration: 0.5,
-    ease: 'power2.out'
+/**鼠标离开，恢复模糊粉色 */
+const handleMouseLeave = () =>{
+  letterRefs.value.forEach(letter => {
+    if(letter) {
+      letter.classList.remove('gray-sharp');
+      letter.classList.add('orange-blur');
+
+      //平滑过渡
+      gsap.to(letter,{
+        filter:'blur(4px)',
+        color: '#FFA1A2',
+        duration: 0.3,
+        ease: 'power2.out'
+      });
+    }
   });
 };
 
@@ -73,7 +91,7 @@ onMounted(() => {
   //等待DOM完全渲染后执行
   nextTick(() => {
     //初始化字母ref数组
-    letterRefs.value = new Array(staticText.length).fill(null);
+    letterRefs.value = Array.from(document.querySelectorAll('.letter'));
   });
 });
 </script>
