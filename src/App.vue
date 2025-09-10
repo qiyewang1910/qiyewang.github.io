@@ -5,7 +5,6 @@
       <!-- 名字标题，通过v-for将文字拆分为单个字母span，便于后续动画操作 -->
       <h1 
         class="name" 
-        ref="nameRef"
         @mouseenter= "handleMouseEnter" 
         @mouseleave= "handleMouseLeave" 
       >
@@ -46,12 +45,20 @@ import { gsap } from 'gsap';
 
 // 固定显示的文字，鼠标悬停时
 const staticText = 'QIYE WANG';
-
+//存储每个字母的DOM引用
 const letterRefs: Ref<(HTMLElement | null)[]> = ref([]);
+//存储模糊动画的定时器
+let blurAnimationInterval: number | null = null;
 
 /**鼠标进入事件处理函数：变清晰的灰色 */
 const handleMouseEnter = () => {
-  //为每个字母添加清晰灰色，移除橙色模糊样式
+  //停止模糊动画
+  if (blurAnimationInterval){
+    clearInterval(blurAnimationInterval);
+    blurAnimationInterval = null;
+  }
+
+  //字母变为清晰灰色，移除橙色模糊样式
   letterRefs.value.forEach(letter => {
     if(letter) {
       letter.classList.remove('orange-blur');
@@ -84,6 +91,41 @@ const handleMouseLeave = () =>{
       });
     }
   });
+
+  // 启动模糊流动动画
+  startBlurWaveAnimation();
+};
+
+/** 启动模糊流动动画 */
+const startBlurWaveAnimation = () => {
+  //清除可能存在的定时器
+  if(blurAnimationInterval) {
+    clearInterval(blurAnimationInterval);
+  }
+
+  //获取有效字母元素（过滤空格和null）
+  const validLetters = letterRefs.value.filter(el => el && el.textContent?.trim() !== '');
+
+  //每300ms推进一次模糊波
+  blurAnimationInterval = window.setInterval(() => {
+    //为每个字母设置不同的模糊度，形成波浪效果
+    validLetters.forEach((letter, index) => {
+      if (letter) {
+        //计算模糊度：使用正弦函数创建波浪效果，范围在2px到6px之间
+        const baseBlur = 4; //基础模糊度
+        const waveIntensity = 2; //波浪强度
+        const phase = (Dare.now() / 500 + index * 0.5) % (Math.PI * 2);
+        const blurAmount = baseBlur + Math.sin(phase) * waveIntensity;
+
+        //应用模糊效果
+        gsap.to(letter, {
+          filter:'blur(${blurAmount}px)',
+          duration: 0.2,
+          ease: 'power1.out'
+        });
+      }
+    });
+  }, 300);
 };
 
 //组件挂载完成后执行
@@ -92,7 +134,18 @@ onMounted(() => {
   nextTick(() => {
     //初始化字母ref数组
     letterRefs.value = Array.from(document.querySelectorAll('.letter'));
+
+    //启动模糊流动动画
+    startBlurWaveAnimation();
   });
+});
+
+//组件卸载时清理定时器
+import { onUnmounted } from 'vue';
+onUnmounted(() => {
+  if (blurAnimationInterval) {
+    clearInterval(blurAnimationInterval);
+  }
 });
 </script>
 
@@ -113,6 +166,7 @@ onMounted(() => {
   background-color: #FFFFFF; /* 背景色为白色 */
   position: relative; /* 为绝对定位的滚动指示器提供参考 */
   margin: 0; /* 移除默认外边距 */
+  padding: 0 20px;
 }
 
 /* 名字标题样式 */
@@ -130,7 +184,6 @@ onMounted(() => {
 /* 单个字母样式，确保能被GSAP动画操作 */
 .letter {
   display: inline-block; /* 行内块级元素，可设置宽高和定位 */
-  position: relative; /* 相对定位，为绝对定位的动画做准备 */
   transition: all 0.3s ease; /* 所有属性变化都有过渡效果 */
 }
 
