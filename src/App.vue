@@ -12,8 +12,8 @@
 
         <!--遍历当前文字，每个字母生成一个span元素-->
         <span
-          class="letter"
-          v-for="(letter, index) in currentText"  
+          class="letter orange-blur"
+          v-for="(letter, index) in staticText"  
           :key="index"
           :ref="(el) => letterRefs[index] = el"
         >
@@ -47,182 +47,35 @@ import { gsap } from 'gsap';
 // 固定显示的文字，鼠标悬停时
 const staticText = 'QIYE WANG';
 
-//动态变化的文字列表，鼠标离开时
-//设计思路：从单个字母逐个过渡到完整名字，营造动态感
-const dynamicTexts =[
-  'Q','QI','QIY','QIYE',  // 逐步显示"QIYE"
-  'W','WA','WAN','WANG',  // 逐步显示"WANG"
-  'Q WANG','QI WANG','QIY WANG',   // 逐步显示完整名字
-  'QIYE W','QIYE WA','QIYE WAN','QIYE WANG',
-];
-
-//当前显示的文字（响应式变量）
-const currentText = ref(dynamicTexts[0]);
-
-//用于获取h1标题DOM元素的ref引用
-const nameRef: Ref<HTMLElement | null> = ref(null);
-
-// 用于存储每个字母span元素的ref数组
 const letterRefs: Ref<(HTMLElement | null)[]> = ref([]);
 
-// 控制是否处于悬停状态的响应式变量
-let isHovered = ref(false);
-
-// 存储动态切换文字的定时器ID
-let animationInterval: number | null = null;
-
-/** 鼠标进入事件处理函数， 功能：切换到固定文字显示清晰灰色效果 */
-
+/**鼠标进入事件处理函数：变清晰的灰色 */
 const handleMouseEnter = () => {
-  //更新状态为悬停中
-  isHovered.value =true;
-
-  //清除动态切换定时器，停止文字变化
-  if (animationInterval){
-    clearInterval(animationInterval);
-    animationInterval = null;
-  }
-
-  //使用GSAP实现淡出动画，为文字切换做准备
-  gsap.to(letterRefs.value.filter(el => el), {
-    opacity: 0,   //透明度变为0（淡出）
-    duration: 0.3,  //动画持续0.3s
-    onComplete: () => {  //淡出完成后执行
-      //更新当前显示的文字为固定文字
-      currentText.value = staticText;
-
-      //等待DOM更新完成（确保新文字已渲染）
-      nextTick(() => {
-        //初始化新的字母数组长度
-        letterRefs.value = new Array(currentText.value.length).fill(null);
-        //为每个字母添加 清晰灰色 样式，移除 橙色模糊 样式
-        letterRefs.value.forEach(letter => {
-          if(letter) {
-            letter.classList.remove('orange-blur');
-            letter.classList.add('gray-sharp');
-          }
-        });
-
-        //执行淡入动画，显示固定文字
-        gsap.to(letterRefs.value.filter(el =>el),{
-          opacity: 1,         //透明度变为1（淡入）
-          duration: 0.3,      //动画持续0.3s
-          ease: 'power2.out'  //缓动函数，使动画更自然
-        });
-      })
+  //为每个字母添加清晰灰色，移除橙色模糊样式
+  letterRefs.value.forEach(letter => {
+    if(letter) {
+      letter.classList.remove('orange-blur');
+      letter.classList.add('gray-sharp');
     }
+  });
+
+  //使用GSAP添加平滑过渡动画
+  gsap.to(letterRefs.value.filter(el => el), {
+    filter:'blur(0)',
+    color: '#848484',
+    duration: 0.5,
+    ease: 'power2.out'
   });
 };
 
-/** 鼠标离开事件处理函数，功能：恢复动态文字，显示橙色模糊效果 */
-const handleMouseLeave = () => {
-  //更新状态为非悬停
-  isHovered.value = false;
-
-  //执行淡出动画，为切换回动态文字做准备
-  gsap.to(letterRefs.value.filter(el => el), {
-    opacity: 0,
-    duration: 0.3,
-    onComplete:() => {
-      //移除“清晰灰色”样式，添加“橙色模糊”样式
-      letterRefs.value.forEach(letter => {
-        if(letter) {
-          letter.classList.remove('gray-sharp');
-          letter.classList.add('orange-blur');
-        }
-      });
-
-      //开始动态切换文字
-      startDynamicAnimation();
-    }
-  });
-};
-
-/**
- * 生成下一个文字的索引（避免与当前索引相同）
- * @param currentIndex 当前显示文字的索引
- * @returns 下一个要显示的文字索引
- */
-function getNextIndex(currentIndex: number){
-  let nextIndex;
-  //确保下一个索引与当前不同，避免连续显示相同的文字
-  do {
-    nextIndex = Math.floor(Math.random() * dynamicTexts.length);
-  } while (nextIndex === currentIndex)
-  return nextIndex;
-}
-
-/**
- * 启动动态文字切换动画
- */
-function startDynamicAnimation(){
-  let currentIndex = 0;
-
-  //立即显示第一个动态文字
-  currentText.value = dynamicTexts[currentIndex];
-  nextTick(() => {
-    // 初始化字母数组长度
-    letterRefs.value = new Array(currentText.value.length).fill(null);
-    //淡入显示第一个文字
-    gsap.to(letterRefs.value.filter(el => el), {
-      opacity: 1,
-      duration : 0.3,
-      ease: 'power2.out'
-    });
-  });
-
-  //设定定时器，定时切换文字（每500ms一次）
-  animationInterval = window.setInterval(() => {
-    // 如果处于悬停状态，不执行切换
-    if (isHovered.value) return;
-
-    //获取下一个要显示的文字索引和内容
-    const nextIndex = getNextIndex(currentIndex);
-    const nextText = dynamicTexts[nextIndex];
-
-    //淡出当前文字
-    gsap.to(letterRefs.value.filter(el => el), {
-      opacity: 0,
-      duration: 0.3,
-      onComplete: () => {
-        //更新当前文字为下一个文字
-        currentText.value = nextText;
-        //等待DOM更新
-        nextTick(() => {
-          //淡入显示新文字
-          gsap.to(letterRefs.value.filter(el => el), {
-            opacity: 1,
-            duration: 0.3,
-            ease: 'power2.out'
-          });
-        });
-      }
-    });
-
-    //更新当前索引
-    currentIndex = nextIndex;
-  }, 500);
-}
-
-// 组件挂载完成后执行
-onMounted (() => {
+//组件挂载完成后执行
+onMounted(() => {
   //等待DOM完全渲染后执行
   nextTick(() => {
     //初始化字母ref数组
-    letterRefs.value = new Array(currentText.value.length).fill(null);
-
-    // 为字母添加初始样式（橙色模糊）
-    letterRefs.value.forEach(letter => {
-      if (letter){
-        letter.classList.add('orange-blur');
-      }
-    });
-
-    //启动动态文字动画
-    startDynamicAnimation();
+    letterRefs.value = new Array(staticText.length).fill(null);
   });
 });
-
 </script>
 
 
@@ -246,7 +99,6 @@ onMounted (() => {
 
 /* 名字标题样式 */
 .name {
-  
   font-family: 'Jaldi', sans-serif; /* 使用Jaldi字体， fallback为无衬线字体 */
   font-size: 96px; /* 字体大小 */
   font-weight: 400; /* 字体粗细，正常粗细 */
@@ -254,6 +106,7 @@ onMounted (() => {
   display: flex; /* 使用flex布局，让字母span横向排列 */
   gap: 4px; /* 字母之间的间距 */
   cursor: pointer; /* 鼠标悬停时显示手形光标 */
+  white-space: pre-wrap; /* 保留空白，且自动换行 */
 }
 
 /* 单个字母样式，确保能被GSAP动画操作 */
@@ -263,18 +116,16 @@ onMounted (() => {
   transition: all 0.3s ease; /* 所有属性变化都有过渡效果 */
 }
 
-/* 橙色模糊样式（鼠标离开时） */
+/* 粉色模糊样式（鼠标离开时） */
 .orange-blur {
   color:#FFA1A2;    /* 文字颜色为粉色 */
   filter: blur(4px);     /* 模糊效果（核心） */
-  transition: filter 0.5s ease-in-out, color 0.5s ease-in-out;  /* 平滑过渡 */
 }
 
 /* 灰色清晰样式（鼠标悬停时） */
 .gray-sharp{
   color: #848484;
   filter: blur(0);     /* 模糊效果（清晰显示） */
-  transition: filter 0.5s ease-in-out, color 0.5s ease-in-out;  /* 平滑过渡 */
 }
 
 
