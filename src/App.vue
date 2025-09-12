@@ -66,7 +66,7 @@ const handleMouseEnter = () => {
 
       //平滑过渡
       gsap.to(letter,{
-        filter:'blur(0)',
+        filter:`blur(0)`,
         color: '#848484',
         duration: 0.1,
         ease: 'power2.out'
@@ -84,7 +84,7 @@ const handleMouseLeave = () =>{
 
       //平滑过渡
       gsap.to(letter,{
-        filter:'blur(4px)',
+        filter:`blur(4px)`,
         color: '#FFA1A2',
         duration: 0.2,
         ease: 'power2.out'
@@ -114,14 +114,14 @@ const startBlurWaveAnimation = () => {
     validLetters.forEach((letter, index) => {
       if (letter) {
         //计算模糊度：使用正弦函数创建波浪效果，范围在2px到6px之间
-        const baseBlur = 4; //基础模糊度
-        const waveIntensity = 2; //波浪强度
-        const phase = (Dare.now() / 500 + index * 0.5) % (Math.PI * 2);
+        const baseBlur = 5; //基础模糊度
+        const waveIntensity = 3; //波浪强度
+        const phase = (Date.now() / 400 + index * 0.5) % (Math.PI * 2);
         const blurAmount = baseBlur + Math.sin(phase) * waveIntensity;
 
         //应用模糊效果
         gsap.to(letter, {
-          filter:'blur(${blurAmount}px)',
+          filter:`blur(${blurAmount}px)`,
           duration: 0.2,
           ease: 'power1.out'
         });
@@ -135,9 +135,7 @@ onMounted(() => {
   //等待DOM完全渲染后执行
   nextTick(() => {
     //初始化字母ref数组
-    letterRefs.value = Array.from(document.querySelectorAll('.letter'));
     console.log('获取到的字母元素数量', letterRefs.value.length);
-    console.log('有效字母元素',letterRefs.value.filter(el => el));
     //启动模糊流动动画
     startBlurWaveAnimation();
   });
