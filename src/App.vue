@@ -86,7 +86,7 @@ const handleMouseLeave = () =>{
       gsap.to(letter,{
         filter:'blur(4px)',
         color: '#FFA1A2',
-        duration: 0.1,
+        duration: 0.2,
         ease: 'power2.out'
       });
     }
@@ -105,9 +105,11 @@ const startBlurWaveAnimation = () => {
 
   //获取有效字母元素（过滤空格和null）
   const validLetters = letterRefs.value.filter(el => el && el.textContent?.trim() !== '');
+  console.log('参与动画的字母数量：', validLetters.length);
 
   //每300ms推进一次模糊波
   blurAnimationInterval = window.setInterval(() => {
+    console.log('动画正在运行。。。');  //验证定时器是否工作
     //为每个字母设置不同的模糊度，形成波浪效果
     validLetters.forEach((letter, index) => {
       if (letter) {
@@ -134,7 +136,8 @@ onMounted(() => {
   nextTick(() => {
     //初始化字母ref数组
     letterRefs.value = Array.from(document.querySelectorAll('.letter'));
-
+    console.log('获取到的字母元素数量', letterRefs.value.length);
+    console.log('有效字母元素',letterRefs.value.filter(el => el));
     //启动模糊流动动画
     startBlurWaveAnimation();
   });
