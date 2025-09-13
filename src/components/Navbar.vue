@@ -1,35 +1,80 @@
 <template>
-    <nav class="fixed top-0  
-                left-0 
-                w-full 
-                z-50 
-                py-6 
-                transition-all 
-                duration-300">
-                <!-- fixed 固定定位：导航栏会固定在浏览器视口顶部，滚动页面时不会消失-->
-                <!-- top-0 left-0	定位到视口的左上角（top: 0; left: 0;）-->
-                <!--w-full	宽度 100%（width: 100%;），让导航栏撑满整个页面宽度-->
-                <!-- z-50	层级为 50（z-index: 50;），确保导航栏在其他元素上方（不被遮挡）-->
-                <!-- py-6	上下内边距为 1.5rem（padding-top: 1.5rem; padding-bottom: 1.5rem;）-->
-                <!--transition-all	开启所有 CSS 属性的过渡动画（如背景色、内边距变化时会平滑过渡）-->
-                <!--duration-300	过渡动画时长为 300 毫秒，让样式变化更丝滑-->
-
-
-        <div class="container mx-auto px-6 flex justify-between items-center">
-            <a hef="#home" class="text-2xl font-bold text-dark hover:text-primary transition-colors">
-                QIYE 
-            </a>
-
-            <div class="hidden md:flex space-x-8">
-                <a href="#projects" class="text-secondary hover:text-primary transition-colors">project</a>
-                <a href="#projects" class="text-secondary hover:text-primary transition-colors">about</a>
-                <a href="#projects" class="text-secondary hover:text-primary transition-colors">resume</a>
-                <a href="#projects" class="text-secondary hover:text-primary transition-colors">contacr</a>
-            </div>
+    <nav 
+      class="fixed top-0 left-0 w-full z-50 transition-all duration-300"
+      :class="{ 'py-3 bg-white/90 backdrop-blur-sm shadow-sm': isScrolled, 'py-6 bg-transparent': !isScrolled }"
+    >
+      <div class="container mx-auto px-6 flex justify-between items-center">
+        <a href="#home" class="text-2xl font-bold text-gray-800 hover:text-rose-500 transition-colors">
+          QIYE
+        </a>
+  
+        <div class="hidden md:flex space-x-8">
+          <a 
+            href="#home" 
+            class="text-gray-600 hover:text-rose-500 transition-colors"
+            :class="{ 'text-rose-500': activeSection === 'home' }"
+          >
+            home
+          </a>
+          <a 
+            href="#project" 
+            class="text-gray-600 hover:text-rose-500 transition-colors"
+            :class="{ 'text-rose-500': activeSection === 'project' }"
+          >
+            projects
+          </a>
+          <a href="#about" class="text-gray-600 hover:text-rose-500 transition-colors">about</a>
+          <a href="#contact" class="text-gray-600 hover:text-rose-500 transition-colors">contact</a>
         </div>
+      </div>
     </nav>
-</template>
-
-<style>
-/* 导航栏样式 */
-</style>
+  </template>
+  
+  <script setup lang="ts">
+  import { ref, onMounted, onUnmounted } from 'vue';
+  
+  // 滚动状态管理
+  const isScrolled = ref(false);
+  const activeSection = ref('home');
+  
+  // 监听滚动事件
+  const handleScroll = () => {
+    // 导航栏样式变化
+    isScrolled.value = window.scrollY > 50;
+  
+    // 监听当前活跃区域（基于滚动位置）
+    const sections = ['home', 'project', 'about', 'contact'];
+    const currentPosition = window.scrollY + 100;
+  
+    for (const section of sections) {
+      const element = document.getElementById(section);
+      if (element) {
+        const { offsetTop, offsetHeight } = element;
+        if (currentPosition >= offsetTop && currentPosition < offsetTop + offsetHeight) {
+          activeSection.value = section;
+          break;
+        }
+      }
+    }
+  };
+  
+  // 平滑滚动到锚点
+  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function(e) {
+      e.preventDefault();
+      const targetId = this.getAttribute('href')?.substring(1);
+      if (targetId) {
+        const targetElement = document.getElementById(targetId);
+        targetElement?.scrollIntoView({ behavior: 'smooth' });
+      }
+    });
+  });
+  
+  onMounted(() => {
+    window.addEventListener('scroll', handleScroll);
+  });
+  
+  onUnmounted(() => {
+    window.removeEventListener('scroll', handleScroll);
+  });
+  </script>
